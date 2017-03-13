@@ -142,22 +142,22 @@ def getSentimentPitchDeviationParallel(mxlfiles):
     toPrint = ""
 
     toPrint += "\nPrinting sentiment-pitch results: \nCourpus Size = "+  str(len(mxlfiles))+"\nTotal lyrics wordcount = " +str(totalWords)
-    toPrint += "Neutral, sentiment-free words: " + str(neutral) + "\nWords not in our database: "+ str(notInDatabase)
+    toPrint += "\nNeutral, sentiment-free words: " + str(neutral) + "\nWords not in our database: "+ str(notInDatabase)
     
     for i in range(10):
     	toPrint += "\nSentiment: " + sentimentIntToString(i) + "\tOccurrence: " + str(wordcount[i])
     	#print(deviations[i])
     	if deviations[i]:
-        	toPrint += "Standard deviations away from song average pitch: \t" + str(round(mean(deviations[i]),2))+  " (p = "+str(stats.kstest(deviations[i],"norm")[1]) +")"
+        	toPrint += "\nStandard deviations away from song average pitch: \t" + str(round(mean(deviations[i]),2))+  " (p = "+str(stats.kstest(deviations[i],"norm")[1]) +")\n"
 
     print(toPrint)
 
     res = open("pitch-result.txt", "w")
-	res.write(toPrint)
-	res.close()
+    res.write(toPrint)
+    res.close()
 
 #pitchDerivationOneSong('../wikifonia/wikifonia-9999.mxl')
 
-getSentimentPitchDeviationParallel(anotherMXL)
+getSentimentPitchDeviationParallel(anotherMXL[:10])
 
 
