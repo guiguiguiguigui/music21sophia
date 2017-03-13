@@ -12,7 +12,7 @@ localCorpus = corpus.corpora.LocalCorpus()
 path = '../wikifonia'
 mxlfiles = [join(path, f) for f in listdir(path) if (isfile(join(path, f)) and f[-3:] == "mxl")]
 
-anotherPath  = '../new_out/enOrganized/lyrics_and_chords'
+anotherPath  = '../wikifonia_en_chords_lyrics'
 anotherMXL = [join(anotherPath, f) for f in listdir(anotherPath) if (isfile(join(anotherPath, f)) and f[-3:] == "mxl")]
 
 nrcPath = '../scripts/NRC-v0.92.txt'
