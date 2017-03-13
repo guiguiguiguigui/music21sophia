@@ -158,6 +158,6 @@ def getSentimentPitchDeviationParallel(mxlfiles):
 
 #pitchDerivationOneSong('../wikifonia/wikifonia-9999.mxl')
 
-getSentimentPitchDeviationParallel(anotherMXL[:10])
+getSentimentPitchDeviationParallel(anotherMXL)
 
 
