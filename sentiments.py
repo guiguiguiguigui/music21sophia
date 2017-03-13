@@ -11,13 +11,13 @@ localCorpus = corpus.corpora.LocalCorpus()
 #localCorpus.addPath('user/phi/Desktop/2cool4school/music21/wikifonia')
 #print(localCorpus.directoryPaths)
 
-path = '/Users/Phi/Desktop/2cool4school/music21/wikifonia'
+#path = '/Users/Phi/Desktop/2cool4school/music21/wikifonia'
 path = '../wikifonia'
 mxlfiles = [join(path, f) for f in listdir(path) if (isfile(join(path, f)) and f[-3:] == "mxl")]
 
 
-anotherPath  = '/Users/Phi/Desktop/2cool4school/music21/new_out/en'
-anotherPath  = '../new_out/en'
+#anotherPath  = '/Users/Phi/Desktop/2cool4school/music21/new_out/en'
+anotherPath  = '../new_out/enOrganized/lyrics_and_chords'
 anotherMXL = [join(anotherPath, f) for f in listdir(anotherPath) if (isfile(join(anotherPath, f)) and f[-3:] == "mxl")]
 #print mxlfiles
 nrcPath = '../scripts/NRC-v0.92.txt'
@@ -85,39 +85,6 @@ def getDeviationForOneSong(work, word):
 
 
 
-def getConsonanceForOneSong(work, word):
-    '''
-    Takes in a filename (work) and a word to search for and returns two elements: the number
-    of times that the word appears and the pitch deviation from the average for that word.
-
-    '''
-    wordCount = 0
-    deviations = []
-    try:
-        score = converter.parse(work)
-        lyric = search.lyrics.LyricSearcher(score.parts[0])
-        justNotes = score.parts[0].recurse().getElementsByClass('Note')
-        if len(justNotes) == 0:
-            return (0, [])
-        pitch = [p.ps for p in justNotes.pitches]
-
-        avg = mean(pitch)
-        stdv = std(pitch)
-
-        words = lyric.search(re.compile(r"\b"+word,re.IGNORECASE))
-
-        if words:
-            for parts in words:
-                for res in parts.els:
-                    wordCount+=1
-                    deviations += [ (res.pitch.ps - avg) / stdv ]
-    except Exception:
-        pass
-
-    return (wordCount, deviations)
-
-
-
 
 def parseNRC(nrcp = nrcPath):
     '''
@@ -178,7 +145,7 @@ def getSentimentPitchDeviationForOneSong(work, sentiment):
     '''
     returns (sentimentCount, averageDeviations) of input.
 
-    >>> wc, dev = getSentimentDeviationForOneSong('../wikifonia/wikifonia-9999.mxl',4)
+    >>> wc, dev = getSentimentPitchDeviationForOneSong('../wikifonia/wikifonia-9999.mxl',4)
     >>> wc
     7
     >>> dev
@@ -230,11 +197,66 @@ def getSentimentPitchDeviationForOneSong(work, sentiment):
     return (count, deviations)
     
 
+def getConsonanceForOneSong(work, sentiment):
+    '''
+    returns how many notes are consonant of a specific sentiment
+    (#of occurance, #of consonance)
+    '''
+    wordCount = 0
+    consonance = 0
+    dic = parseNRC()
+
+    score = converter.parse(work)
+
+    for i in score.recurse().getElementsByClass('Note'):
+        cs = i.getContextByClass('ChordSymbol')
+        csp = cs.pitches
+        newChord = chord.Chord(tuple(i.pitches) + csp)
+        print(i, newChord, newChord.isConsonant(), i.lyric)
+
+    return (wordCount, consonance)
+
+    #beat strenth???
+'''
+    tempStrings = {}
+    
+    for n in justNotes:
+        lyricList = n.lyrics
+
+        for i in range(len(lyricList)):
+
+            lyric = lyricList[i].text.lower()
+
+            syllabic = lyricList[i].syllabic
+
+            if syllabic == "begin":
+                tempStrings[i] = lyric
+                continue
+            elif syllabic == "middle":
+                tempStrings[i] += lyric
+                continue
+            elif syllabic == "end":
+                lyric = tempStrings[i]+lyric
+           
+            if lyric not in dic:
+                continue  
+
+            if dic[lyric][sentiment] == 1:
+                count += 1
+                deviations += [ (n.pitch.ps - avg) / stdv ]
+                
+            tempStrings[i] = ""
+'''
+
+
+
+
 
 
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+    getConsonanceForOneSong(anotherPath+"/wikifonia-1003.mxl", 0)
     #getSongAverage(mxlfiles)
 
     #getDeviationParallel(anotherMXL,"high")

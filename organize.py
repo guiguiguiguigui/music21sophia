@@ -5,8 +5,8 @@ from functools import partial
 from langid import *
 
 #inputPath = '/Users/Phi/Desktop/2cool4school/music21/new_in'
-inputPath = '../wikifonia'
-outputPath ='../new_out'
+inputPath = '../new_out/enOrganized/has_chords'
+outputPath ='../new_out/enOrganized/lyrics_and_chords'
 
 
 def update(numRun, totalRun, latestOutput):
@@ -71,6 +71,6 @@ def catagorizeByLanguage(score):
 
 if __name__ == '__main__':
 
-    organizeParallel(inputPath, outputPath, [catagorizeByLanguage])
+    organizeParallel(inputPath, outputPath, [hasLyrics])
 
 
