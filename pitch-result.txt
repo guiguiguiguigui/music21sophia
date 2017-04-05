@@ -1,0 +1,41 @@
+
+Printing sentiment-pitch results: 
+Corpus Size = 2045
+Total lyrics wordcount = 437077
+Neutral, sentiment-free words: 26421
+Words not in our database: 162653
+Sentiment: anger	Occurrence: 2930
+Standard deviations away from song average pitch: 	-0.0519 (p = 0.0073658645732)
+
+Sentiment: anticipation	Occurrence: 7106
+Standard deviations away from song average pitch: 	0.0369 (p = 6.68754138807e-11)
+
+Sentiment: disgust	Occurrence: 2217
+Standard deviations away from song average pitch: 	-0.0173 (p = 0.049677996675)
+
+Sentiment: fear	Occurrence: 3515
+Standard deviations away from song average pitch: 	-0.0006 (p = 0.00408083630561)
+
+Sentiment: joy	Occurrence: 9457
+Standard deviations away from song average pitch: 	0.0254 (p = 1.53299735493e-11)
+
+Sentiment: negative	Occurrence: 6302
+Standard deviations away from song average pitch: 	-0.0006 (p = 1.14609245561e-05)
+
+Sentiment: positive	Occurrence: 12784
+Standard deviations away from song average pitch: 	0.021 (p = 1.71829890981e-13)
+
+Sentiment: sadness	Occurrence: 4847
+Standard deviations away from song average pitch: 	-0.0007 (p = 0.000239115339466)
+
+Sentiment: surprise	Occurrence: 3565
+Standard deviations away from song average pitch: 	0.0537 (p = 1.69970333282e-08)
+
+Sentiment: trust	Occurrence: 6206
+Standard deviations away from song average pitch: 	0.0232 (p = 9.29641554654e-05)
+
+Sentiment: neutral	Occurrence: 26421
+Standard deviations away from song average pitch: 	0.0112 (p = 3.39821794013e-19)
+
+Sentiment: unknown	Occurrence: 162653
+Standard deviations away from song average pitch: 	-0.0368 (p = 2.45105093198e-80)

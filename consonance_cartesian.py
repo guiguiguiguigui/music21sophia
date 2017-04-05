@@ -1,11 +1,22 @@
+from __future__ import print_function
+
 from music21 import *
 from numpy import *
 from scipy import stats
 from os import listdir
 from os.path import isfile, join
 from functools import partial
+from collections import defaultdict
 import string 
 
+
+debug = False
+
+systemPrint = print
+
+def debugPrint(*args, **kwargs):
+    if debug:
+        systemPrint(*args, **kwargs)
 
 localCorpus = corpus.corpora.LocalCorpus()
 
@@ -62,102 +73,110 @@ def sentimentIntToString(sentInt):
 
 
 #returns (count, deviations, neutral, notInDatabase)
-def pitchDerivationOneSong(work):
+def consonanceOneSong(work):
     count = [0] * 10
-    deviations = [[],[],[],[],[],[],[],[],[],[]] 
-    neutral = 0
-    notInDatabase = 0
+    consonance = [0] * 10 
 
     score = converter.parse(work)
     justNotes = score.parts[0].recurse().getElementsByClass('Note').stream()
-    if len(justNotes) == 0:
-        return (0, [])
-
-    pitch = [p.ps for p in justNotes.pitches]
-
-    avg = mean(pitch)
-    stdv = std(pitch)
 
     tempStrings = {}
+    tempNotes = defaultdict(list)
 
     for n in justNotes:
         lyricList = n.lyrics
 
         for i in range(len(lyricList)):
 
-            lyric = lyricList[i].text.lower().translate(None, string.punctuation) #rid string of punctuations
+            lyric = lyricList[i].text
+            if isinstance(lyric,str):
+                lyric = lyric.lower().translate(None, string.punctuation) #rid string of punctuations
 
             syllabic = lyricList[i].syllabic
-
+            tempNotes[i].append(n.pitches)
             #handles case where sylables are seperated
             if syllabic == "begin":
                 tempStrings[i] = lyric
                 continue
             elif syllabic == "middle":
-                tempStrings[i] += lyric
+                if i in tempStrings.keys(): 
+                    tempStrings[i] += lyric
+                else:
+                    tempStrings[i] = lyric
                 continue
             elif syllabic == "end":
                 lyric = tempStrings[i]+lyric if i in tempStrings.keys() else lyric
-           
+                
+            debugPrint(lyric)
             if lyric not in dic:
-                notInDatabase += 1  
                 continue
 
-            songDiv =  (n.pitch.ps - avg) / stdv 
-            neutralWord = True
-           
-            for index, val in enumerate(dic[lyric]): 
-            	if val == 1:
-            		neutralWord = False
-	                count[index] += 1
-	                deviations[index] += [songDiv]
+            cs = n.getContextByClass('ChordSymbol')
+            if not cs:
+                continue
+            csp = cs.pitches
+            newChord = chord.Chord(tuple(n.pitches) + csp)
 
-	        if neutralWord:
-	        	neutral += 1
+            for index, val in enumerate(dic[lyric]): 
+                if val == 1:
+                    count[index] += 1
+                    if newChord.isConsonant():
+                        consonance[index] += 1
 
                 
             tempStrings[i] = ""
+            tempNotes[i] = []
 
-    return (count, deviations, neutral, notInDatabase)
+    return (count, consonance)
 
 
-def getSentimentPitchDeviationParallel(mxlfiles):
+def getSentimentConsonanceParallel(mxlfiles):
 
     wordcount = [0] * 10
-    deviations = [[],[],[],[],[],[],[],[],[],[]] 
-    neutral = 0
-    notInDatabase = 0
+    consonance = [0] * 10
+
 
     count = 0 
-    output = common.runParallel(mxlfiles, pitchDerivationOneSong, update)
+    output = common.runParallel(mxlfiles, consonanceOneSong, update)
     
-    for count1, deviations1, neutral1, notInDatabase1 in output:
+    for count1, consonance1 in output:
         wordcount = map(sum, zip(wordcount,count1))
-        deviations = map(lambda (x,y): x+y, zip(deviations,deviations1))
-        neutral += neutral1
-        notInDatabase += notInDatabase1
+        consonance = map(sum, zip(consonance,consonance1))
     
-    totalWords= sum(wordcount)+neutral+notInDatabase
 
     toPrint = ""
 
-    toPrint += "\nPrinting sentiment-pitch results: \nCourpus Size = "+  str(len(mxlfiles))+"\nTotal lyrics wordcount = " +str(totalWords)
-    toPrint += "\nNeutral, sentiment-free words: " + str(neutral) + "\nWords not in our database: "+ str(notInDatabase)
+    toPrint += "\nPrinting sentiment-pitch results: \nCorpus Size = "+  str(len(mxlfiles)) #+"\nTotal lyrics wordcount = " +str(totalWords)
+    #toPrint += "\nNeutral, sentiment-free words: " + str(neutral) + "\nWords not in our database: "+ str(notInDatabase)
     
     for i in range(10):
     	toPrint += "\nSentiment: " + sentimentIntToString(i) + "\tOccurrence: " + str(wordcount[i])
     	#print(deviations[i])
-    	if deviations[i]:
-        	toPrint += "\nStandard deviations away from song average pitch: \t" + str(round(mean(deviations[i]),2))+  " (p = "+str(stats.kstest(deviations[i],"norm")[1]) +")\n"
+        if wordcount[i]:
+            toPrint += "\n Percentage of consonant notes: \t" + str(round(100*consonance[i]/wordcount[i],2)) +"%"#+  " (p = "+str(stats.kstest(deviations[i],"norm")[1]) +")\n"
 
     print(toPrint)
 
-    res = open("pitch-result.txt", "w")
-    res.write(toPrint)
-    res.close()
 
-#pitchDerivationOneSong('../wikifonia/wikifonia-9999.mxl')
+#print(consonanceOneSong('../wikifonia/wikifonia-9999.mxl'))
+'''
+def getTitle(mxl):
+    score = converter.parse(mxl)
+    return score.metadata.title
 
-getSentimentPitchDeviationParallel(anotherMXL)
+count = 0
+string = ""
+
+for score in anotherMXL:
+    count += 1
+    if (count%50 == 0):
+        print("--- Finished " + str(count))
+    string += getTitle(score) +"\n"
+
+res = open("title_list.txt", "w")
+res.write(string)
+res.close()
+'''
+getSentimentConsonanceParallel(anotherMXL)
 
 
