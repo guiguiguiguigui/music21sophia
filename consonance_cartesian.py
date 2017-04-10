@@ -72,14 +72,18 @@ def sentimentIntToString(sentInt):
     return strings[sentInt]
 
 
-#returns (count, deviations, neutral, notInDatabase)
+#returns (count, consonancePos, deviationsNeg, neutral, notInDatabase)
 def consonanceOneSong(work):
     count = [0] * 10
-    consonance = [0] * 10 
+    # for Unpaired t-test, we need to have two groups of data: expriment and control 
+    consonancePos = [[],[],[],[],[],[],[],[],[],[],[]] 
+    consonanceNeg = [[],[],[],[],[],[],[],[],[],[],[]] 
+
+    neutral = [0,[]]
+    notInDatabase = [0,[]]
 
     score = converter.parse(work)
-    justNotes = score.parts[0].recurse().getElementsByClass('Note').stream()
-
+ 
     tempStrings = {}
     tempNotes = defaultdict(list)
 
@@ -107,9 +111,6 @@ def consonanceOneSong(work):
             elif syllabic == "end":
                 lyric = tempStrings[i]+lyric if i in tempStrings.keys() else lyric
                 
-            debugPrint(lyric)
-            if lyric not in dic:
-                continue
 
             cs = n.getContextByClass('ChordSymbol')
             if not cs:
@@ -117,17 +118,33 @@ def consonanceOneSong(work):
             csp = cs.pitches
             newChord = chord.Chord(tuple(n.pitches) + csp)
 
-            for index, val in enumerate(dic[lyric]): 
-                if val == 1:
-                    count[index] += 1
-                    if newChord.isConsonant():
-                        consonance[index] += 1
 
-                
+            if lyric not in dic:
+                notInDatabase[0] += 1
+                notInDatabase[1] += [songDiv]  
+                # print(lyric)
+                continue
+
+            neutralWord = True
+
+            for index, val in enumerate(dic[lyric]): 
+                consonanceThis = [1] if newChord.isConsonant() else [0]
+                if val == 1:
+                    neutralWord = False
+                    count[index] += 1
+                    consonancePos[index] += consonanceThis
+                else:
+                    consonanceNeg[index] += consonanceThis
+
+            
+            if neutralWord:
+                neutral[0] += 1
+                neutral[1] += [songDiv]
+
             tempStrings[i] = ""
             tempNotes[i] = []
 
-    return (count, consonance)
+    return (count, consonancePos, consonanceNeg, neutral, notInDatabase)
 
 
 def getSentimentConsonanceParallel(mxlfiles):

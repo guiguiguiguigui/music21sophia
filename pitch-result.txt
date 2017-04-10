@@ -1,41 +1,45 @@
 
-Printing sentiment-pitch results: 
-Corpus Size = 2045
-Total lyrics wordcount = 437077
-Neutral, sentiment-free words: 26421
-Words not in our database: 162653
-Sentiment: anger	Occurrence: 2930
-Standard deviations away from song average pitch: 	-0.0519 (p = 0.0073658645732)
+Printing sentiment-consonance results: 
+Corpus Size = 10
+Total lyrics wordcount = 951
+Neutral, sentiment-free words: 79
+Words not in our database: 639
+Sentiment: anger	Occurrence: 4
+More consonant than no such sentiment: -8.45588235294 % (p = 0.800602414463)
+More consonant than neutral words: -11.5671641791 % (p = [ 0.72313932])
 
-Sentiment: anticipation	Occurrence: 7106
-Standard deviations away from song average pitch: 	0.0369 (p = 6.68754138807e-11)
+Sentiment: anticipation	Occurrence: 32
+More consonant than no such sentiment: -14.4935344828 % (p = 0.167043916382)
+More consonant than neutral words: -15.2518656716 % (p = [ 0.15902358])
 
-Sentiment: disgust	Occurrence: 2217
-Standard deviations away from song average pitch: 	-0.0173 (p = 0.049677996675)
+Sentiment: disgust	Occurrence: 8
+More consonant than no such sentiment: -8.64661654135 % (p = 0.681719378671)
+More consonant than neutral words: -11.5671641791 % (p = [ 0.57698489])
 
-Sentiment: fear	Occurrence: 3515
-Standard deviations away from song average pitch: 	-0.0006 (p = 0.00408083630561)
+Sentiment: fear	Occurrence: 14
+More consonant than no such sentiment: -22.8571428571 % (p = 0.183273816105)
+More consonant than neutral words: -24.2004264392 % (p = [ 0.15970209])
 
-Sentiment: joy	Occurrence: 9457
-Standard deviations away from song average pitch: 	0.0254 (p = 1.53299735493e-11)
+Sentiment: joy	Occurrence: 40
+More consonant than no such sentiment: -2.80373831776 % (p = 0.750755734233)
+More consonant than neutral words: -5.67164179104 % (p = [ 0.52804724])
 
-Sentiment: negative	Occurrence: 6302
-Standard deviations away from song average pitch: 	-0.0006 (p = 1.14609245561e-05)
+Sentiment: negative	Occurrence: 23
+More consonant than no such sentiment: 1.19565217391 % (p = 0.911369161195)
+More consonant than neutral words: -2.59571706684 % (p = [ 0.80918024])
 
-Sentiment: positive	Occurrence: 12784
-Standard deviations away from song average pitch: 	0.021 (p = 1.71829890981e-13)
+Sentiment: positive	Occurrence: 53
+More consonant than no such sentiment: 2.24428997021 % (p = 0.774568199158)
+More consonant than neutral words: -2.11208110391 % (p = [ 0.78675889])
 
-Sentiment: sadness	Occurrence: 4847
-Standard deviations away from song average pitch: 	-0.0007 (p = 0.000239115339466)
+Sentiment: sadness	Occurrence: 20
+More consonant than no such sentiment: -2.43902439024 % (p = 0.83843006894)
+More consonant than neutral words: -5.67164179104 % (p = [ 0.63561227])
 
-Sentiment: surprise	Occurrence: 3565
-Standard deviations away from song average pitch: 	0.0537 (p = 1.69970333282e-08)
+Sentiment: surprise	Occurrence: 13
+More consonant than no such sentiment: 3.78605769231 % (p = 0.78050791661)
+More consonant than neutral words: -0.229621125144 % (p = [ 0.98631984])
 
-Sentiment: trust	Occurrence: 6206
-Standard deviations away from song average pitch: 	0.0232 (p = 9.29641554654e-05)
-
-Sentiment: neutral	Occurrence: 26421
-Standard deviations away from song average pitch: 	0.0112 (p = 3.39821794013e-19)
-
-Sentiment: unknown	Occurrence: 162653
-Standard deviations away from song average pitch: 	-0.0368 (p = 2.45105093198e-80)
+Sentiment: trust	Occurrence: 26
+More consonant than no such sentiment: -1.43415906128 % (p = 0.891023406268)
+More consonant than neutral words: -4.76463834673 % (p = [ 0.65115224])

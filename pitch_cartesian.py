@@ -1,5 +1,6 @@
 from music21 import *
 from numpy import *
+from collections import defaultdict
 from scipy import stats
 from os import listdir
 from os.path import isfile, join
@@ -61,19 +62,24 @@ def sentimentIntToString(sentInt):
     return strings[sentInt]
 
 
-#returns (count, deviations, neutral, notInDatabase)
-neutralIndex = 10
-notInDatabaseIndex = 11
+#returns (count, deviationsPos, deviationsNeg, neutral, notInDatabase)
+#neutralIndex = 10
+#notInDatabaseIndex = 11
 
 def pitchDerivationOneSong(work):
-    count = [0] * 12
-    deviations = [[],[],[],[],[],[],[],[],[],[],[],[]] 
-    neutral = 0
-    notInDatabase = 0
+    count = [0] * 10 # number of lyrics with each sentiment
+
+    # for Unpaired t-test, we need to have two groups of data: expriment and control 
+    deviationsPos = [[],[],[],[],[],[],[],[],[],[],[]] 
+    deviationsNeg = [[],[],[],[],[],[],[],[],[],[],[]] 
+
+    neutral = [0,[]]
+    notInDatabase = [0,[]]
 
     score = converter.parse(work)
     justNotes = score.parts[0].recurse().getElementsByClass('Note').stream()
 
+    '''
     hasBegin = False
     for n in justNotes:
         lyricList = n.lyrics
@@ -85,9 +91,9 @@ def pitchDerivationOneSong(work):
 
     if not hasBegin:
         print("No hasBegin")
-        return (count, deviations, neutral, notInDatabase)
+        return (count, deviationsPos, deviationsNeg, neutral, notInDatabase)
 
-
+    '''
     pitch = [p.ps for p in justNotes.pitches]
 
     avg = mean(pitch)
@@ -124,9 +130,8 @@ def pitchDerivationOneSong(work):
             songDiv =  (n.pitch.ps - avg) / stdv 
            
             if lyric not in dic:
-                notInDatabase += 1
-                count[notInDatabaseIndex] += 1
-                deviations[notInDatabaseIndex] += [songDiv]  
+                notInDatabase[0] += 1
+                notInDatabase[1] += [songDiv]  
                 # print(lyric)
                 continue
 
@@ -136,53 +141,172 @@ def pitchDerivationOneSong(work):
                 if val == 1:
                     neutralWord = False
                     count[index] += 1
-                    deviations[index] += [songDiv]
+                    deviationsPos[index] += [songDiv]
+                else:
+                    deviationsNeg[index] += [songDiv]
+
 
             if neutralWord:
-                neutral += 1
-                count[neutralIndex] += 1
-                deviations[neutralIndex] += [songDiv]
-
-
-
+                neutral[0] += 1
+                neutral[1] += [songDiv]
                 
             tempStrings[i] = ""
 
-    return (count, deviations, neutral, notInDatabase)
+    return (count, deviationsPos, deviationsNeg, neutral, notInDatabase)
 
 
-def getSentimentPitchDeviationParallel(mxlfiles):
+#returns (count, consonancePos, consonanceNeg, neutral, notInDatabase)
+def consonanceOneSong(work, returnScore=False, inChordEqConsonant=True):
+    count = [0] * 10
+    # for Unpaired t-test, we need to have two groups of data: expriment and control 
+    consonancePos = [[],[],[],[],[],[],[],[],[],[],[]] 
+    consonanceNeg = [[],[],[],[],[],[],[],[],[],[],[]] 
 
-    wordcount = [0] * 12 # number of occurences of each sentiment
-    deviations = [[],[],[],[],[],[],[],[],[],[],[],[]] 
-    neutral = 0
-    notInDatabase = 0
+    neutral = [0,[]]
+    notInDatabase = [0,[]]
+    score = converter.parse(work)
+    justNotes = score.parts[0].recurse().getElementsByClass('Note').stream()
+
+ 
+    tempStrings = {}
+    tempNotes = defaultdict(list)
+
+    for n in justNotes:
+        lyricList = n.lyrics
+
+        for i in range(len(lyricList)):
+
+            lyric = lyricList[i].text
+            if isinstance(lyric,str):
+                lyric = lyric.lower().translate(None, string.punctuation) #rid string of punctuations
+
+            syllabic = lyricList[i].syllabic
+            tempNotes[i].append(n.pitches)
+            #handles case where sylables are seperated
+            if syllabic == "begin":
+                tempStrings[i] = lyric
+                continue
+            elif syllabic == "middle":
+                if i in tempStrings.keys(): 
+                    tempStrings[i] += lyric
+                else:
+                    tempStrings[i] = lyric
+                continue
+            elif syllabic == "end":
+                lyric = tempStrings[i]+lyric if i in tempStrings.keys() else lyric
+                
+
+            if lyric not in dic:
+                notInDatabase[0] += 1
+                continue
+
+            cs = n.getContextByClass('ChordSymbol')
+            if not cs:
+                continue
+
+            neutralWord = True
+
+            if inChordEqConsonant is False:
+                csp = cs.pitches
+                newChord = chord.Chord(tuple(n.pitches) + csp)
+                consonanceThis = [1] if newChord.isConsonant() else [0]
+            else:
+                # consider consonant if note pitch is in chord, regardless of
+                # whether the chord itself is dissonant
+                # use pitchClass to not have enharmonic be a problem
+                if n.pitch.pitchClass in [p.pitchClass for p in cs.pitches]:
+                    consonanceThis = [1]
+                else:
+                    consonanceThis = [0]
+
+            for index, val in enumerate(dic[lyric]): 
+                if val == 1:
+                    neutralWord = False
+                    count[index] += 1
+                    consonancePos[index] += consonanceThis
+                else:
+                    consonanceNeg[index] += consonanceThis
+
+            
+            if neutralWord:
+                neutral[0] += 1
+                neutral[1] += [consonanceThis]
+
+            # fix up the score for next time...
+            if returnScore:
+                sentimentLyric = n.lyric + ';'
+                for i in range(len(dic[lyric])):
+                    if dic[lyric][i] == 1:
+                        sentimentLyric += ':' + sentimentIntToString(i)[0:3]
+
+                n.lyric = str(consonanceThis) + '.' + sentimentLyric
+            tempStrings[i] = ""
+            tempNotes[i] = []
+
+    if returnScore:
+        return score
+    else:
+        return (count, consonancePos, consonanceNeg, neutral, notInDatabase)
+
+
+def runParallel(mxlfiles, oneSongMethod, name):
+
+
+    wordcount = [0] * 10 # number of occurences of each sentiment
+    # for Unpaired t-test, we need to have two groups of data: expriment and control 
+    pos = [[],[],[],[],[],[],[],[],[],[],[]] 
+    neg = [[],[],[],[],[],[],[],[],[],[],[]] 
+    neutral = [0,[]]
+    notInDatabase = [0,[]]
 
     count = 0 
-    output = common.runParallel(mxlfiles, pitchDerivationOneSong, update)
+    output = common.runParallel(mxlfiles, oneSongMethod, update)
+
+    def combineList(list1, list2):
+        return map(lambda (x,y): x+y, zip(list1, list2))
+
+    for count1, pos1, neg1,  neutral1, notInDatabase1 in output:
+        wordcount = combineList(wordcount, count1)
+        pos = combineList(pos, pos1)
+        neg = combineList(neg, neg1)
+        neutral = combineList(neutral, neutral1)
+        notInDatabase = combineList(notInDatabase,notInDatabase1)
     
-    for count1, deviations1, neutral1, notInDatabase1 in output:
-        wordcount = map(sum, zip(wordcount, count1))
-        deviations = map(lambda (x,y): x+y, zip(deviations, deviations1))
-        neutral += neutral1
-        notInDatabase += notInDatabase1
-    
-    totalWords= sum(wordcount)+neutral+notInDatabase
+    totalWords= sum(wordcount)+neutral[0]+notInDatabase[0]
 
     toPrint = ""
 
-    toPrint += "\nPrinting sentiment-pitch results: \nCorpus Size = "+  str(len(mxlfiles))+"\nTotal lyrics wordcount = " +str(totalWords)
-    toPrint += "\nNeutral, sentiment-free words: " + str(neutral) + "\nWords not in our database: "+ str(notInDatabase)
+    toPrint += "\nPrinting sentiment-"+name+" results: \nCorpus Size = "+  str(len(mxlfiles))+"\nTotal lyrics wordcount = " +str(totalWords)
+    toPrint += "\nNeutral, sentiment-free words: " + str(neutral[0]) + "\nWords not in our database: "+ str(notInDatabase[0])
     
-    for i in range(12):
-        thisDeviation = deviations[i]
+    for i in range(10):
+        thisPos = pos[i]
+        thisNeg = neg[i]
         toPrint += "\nSentiment: " + sentimentIntToString(i) + "\tOccurrence: " + str(wordcount[i])
+        print(thisPos)
+        print(thisNeg)
+        print(neutral[1])
         #print(deviations[i])
-        if thisDeviation:
+        if thisPos:
             # toPrint += "\n" + str(thisDeviation)
-            pValue = stats.kstest(thisDeviation, "norm")[1]
-            deviationsFromMean = round(mean(thisDeviation), 4)
-            toPrint += "\nStandard deviations away from song average pitch: \t" + str(deviationsFromMean)+  " (p = "+str(pValue) +")\n"
+            _, pValue = stats.ttest_ind(thisPos, thisNeg, equal_var=False)
+            _, pValueN = stats.ttest_ind(thisPos, neutral[1], equal_var=False)
+            
+            if name == "pitch":
+                
+                deviationsFromMean = round(mean(thisPos), 4)
+                toPrint += "\nStandard deviations away from song average pitch: \t" + str(deviationsFromMean)+  " (p = "+str(pValue) +")\n"
+            
+            elif name == "consonance":
+                posAverage = sum(thisPos)/float(len(thisPos))
+                negAverage = sum(thisNeg)/float(len(thisNeg))
+                neuAverage = sum(neutral[1])/float(len(neutral[1]))
+                percentMoreConsonanceNeg = 100*(posAverage - negAverage)/negAverage
+                percentMoreConsonanceNeu = 100*(posAverage - neuAverage)/neuAverage
+                toPrint += "\nMore consonant than no such sentiment: " + str(percentMoreConsonanceNeg) + " % (p = "+str(pValue) +")\n"
+                toPrint += "More consonant than neutral words: " + str(percentMoreConsonanceNeu) + " % (p = "+str(pValueN) +")\n"
+
+
 
     print(toPrint)
 
@@ -192,6 +316,9 @@ def getSentimentPitchDeviationParallel(mxlfiles):
 
 #pitchDerivationOneSong('../wikifonia/wikifonia-9999.mxl')
 
-getSentimentPitchDeviationParallel(anotherMXL)
+#getSentimentPitchDeviationParallel(anotherMXL)
 
+#runParallel(anotherMXL,pitchDerivationOneSong,"pitch")
+if __name__ == '__main__':
+    runParallel(anotherMXL[:10],consonanceOneSong,"consonance")
 
